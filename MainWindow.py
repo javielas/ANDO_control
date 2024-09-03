@@ -118,15 +118,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.widget = PlotWidget(self.centralwidget)
-        self.widget.setObjectName(u"widget")
+        self.plotWidget = PlotWidget(self.centralwidget)
+        self.plotWidget.setObjectName(u"plotWidget")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy)
+        sizePolicy.setHeightForWidth(self.plotWidget.sizePolicy().hasHeightForWidth())
+        self.plotWidget.setSizePolicy(sizePolicy)
 
-        self.horizontalLayout_4.addWidget(self.widget)
+        self.horizontalLayout_4.addWidget(self.plotWidget)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
@@ -139,13 +139,33 @@ class Ui_MainWindow(object):
 
         self.listView = QListView(self.centralwidget)
         self.listView.setObjectName(u"listView")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.listView.sizePolicy().hasHeightForWidth())
+        self.listView.setSizePolicy(sizePolicy1)
 
         self.verticalLayout.addWidget(self.listView)
 
-        self.pushButton = QPushButton(self.centralwidget)
-        self.pushButton.setObjectName(u"pushButton")
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.DeletePushButton = QPushButton(self.centralwidget)
+        self.DeletePushButton.setObjectName(u"DeletePushButton")
 
-        self.verticalLayout.addWidget(self.pushButton)
+        self.horizontalLayout_6.addWidget(self.DeletePushButton)
+
+        self.SavePushButton = QPushButton(self.centralwidget)
+        self.SavePushButton.setObjectName(u"SavePushButton")
+
+        self.horizontalLayout_6.addWidget(self.SavePushButton)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_6)
+
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
 
 
         self.horizontalLayout_3.addLayout(self.verticalLayout)
@@ -154,6 +174,8 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addLayout(self.horizontalLayout_3)
 
+        self.horizontalLayout_4.setStretch(0, 4)
+        self.horizontalLayout_4.setStretch(1, 1)
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
@@ -185,9 +207,10 @@ class Ui_MainWindow(object):
         self.referenceLevelLabel.setText(QCoreApplication.translate("MainWindow", u"Reference Level (dBm)", None))
         self.resoltuionNmLabel.setText(QCoreApplication.translate("MainWindow", u"Resoltuion (nm)", None))
         self.SweepPushButton.setText(QCoreApplication.translate("MainWindow", u"Sweep", None))
-        self.RepeatSweepPushButton.setText(QCoreApplication.translate("MainWindow", u"Repeat sweep", None))
-        self.StopRepeatPushButton.setText(QCoreApplication.translate("MainWindow", u"Stop repeat", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Traces", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
+        self.RepeatSweepPushButton.setText(QCoreApplication.translate("MainWindow", u"Continuous sweep", None))
+        self.StopRepeatPushButton.setText(QCoreApplication.translate("MainWindow", u"Stop continuous", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Visible", None))
+        self.DeletePushButton.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
+        self.SavePushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
     # retranslateUi
 

@@ -17,6 +17,9 @@
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>16</number>
+      </property>
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
       </property>
@@ -123,23 +126,23 @@
       <item>
        <widget class="QPushButton" name="RepeatSweepPushButton">
         <property name="text">
-         <string>Repeat sweep</string>
+         <string>Continuous sweep</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="StopRepeatPushButton">
         <property name="text">
-         <string>Stop repeat</string>
+         <string>Stop continuous</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="4,1">
       <item>
-       <widget class="PlotWidget" name="widget" native="true">
+       <widget class="PlotWidget" name="plotWidget" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -155,19 +158,40 @@
           <item>
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Traces</string>
+             <string>Visible</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QListView" name="listView"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="text">
-             <string>Save</string>
+           <widget class="QListView" name="listView">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <widget class="QPushButton" name="DeletePushButton">
+              <property name="text">
+               <string>Delete</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="SavePushButton">
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5"/>
           </item>
          </layout>
         </item>
