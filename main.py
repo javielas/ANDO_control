@@ -6,6 +6,7 @@ import pyqtgraph as pg
 import numpy as np
 import time
 
+
 from MainWindow import Ui_MainWindow
 
 
@@ -147,18 +148,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #Create a threadpool for multithreading
         self.threadpool = QThreadPool()  
 
+        self.model = SpectraViewList() # Set the model to be used and link it to the list of spectra
+        self.listView.setModel(self.model) # Assign to the listView widget the model
+
         #Plot Attributes
         self.plotWidget.setBackground('w')
-        self.plotWidget.setLabel('left', 'Power (dBm)')
-        self.plotWidget.setLabel('bottom', 'Wavelength (nm)')
+        styles = {"color": "k", "font-size": "25px"}
+        self.plotWidget.setLabel('left', 'Power (dBm)', **styles)
+        self.plotWidget.setLabel('bottom', 'Wavelength (nm)', **styles)
+        self.plotWidget.showGrid(x=True, y=True)
+
+        #XY label coordinates for the plot
+        self.x_label = pg.LabelItem("X:   ", color = 'k', size = '15pt')
+        self.y_label = pg.LabelItem("Y:   ", color = 'k', size = '15pt')
+        self.x_label.setParentItem(self.plotWidget.graphicsItem())
+        self.y_label.setParentItem(self.plotWidget.graphicsItem())
+        self.x_label.anchor(itemPos=(0.15, 0.9), parentPos=(0.03, 0.97))
+        self.y_label.anchor(itemPos=(0.15, 0.9), parentPos=(0.03, 1))
+
+        #Cross Cursor with lines
+        cursor = Qt.CursorShape.CrossCursor
+        self.plotWidget.setCursor(cursor)
+        self.crosshair_en = True
+        self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
+        self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
+        self.plotWidget.addItem(self.crosshair_v, ignoreBounds=True)
+        self.plotWidget.addItem(self.crosshair_h, ignoreBounds=True)
+        # Assign slot to the mousemovement
+        self.proxy = pg.SignalProxy(self.plotWidget.scene().sigMouseMoved, rateLimit=60, slot=self.update_crosshair)
 
         #Buttons slot connections
         self.SweepPushButton.clicked.connect(self.getAndPlotSpectrum)
         self.DeletePushButton.clicked.connect(self.deleteTrace)
-
-        self.model = SpectraViewList() # Set the model to be used and link it to the list of spectra
-        self.listView.setModel(self.model) # Assign to the listView widget the model
-
+        self.model.check_state_changed.connect(self.handle_check_state_changed)
 
 
     @Slot()
@@ -173,8 +195,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def plotSpectrum(self, spectrum):
         """Plots the spectrum and adds it to the list of spectra"""
         power, wavelength = spectrum[0], spectrum[1]
-        color = QtGui.QColor(colors[len(self.model.spectraList)])
-        pen = pg.mkPen(color= color)
+        #Get the previous color from the list or start with the first one
+        if len(self.model.spectraList) != 0:
+            previous_color = self.model.spectraList[-1]['color']
+            color = QtGui.QColor(colors[(colors.index(previous_color)+1) % len(colors)]) 
+        else:
+            color = QtGui.QColor(colors[0])
+        #Get the color that's the next from the last one in the list
+        pen = pg.mkPen(color= QtGui.QColor(color))
         plot = self.plotWidget.plot(power, wavelength, name = f'Trace {len(self.model.spectraList)}', pen = pen)
         list_item_dict = dict(name = f'Trace {len(self.model.spectraList)}', color = color, visible =True, plot = plot)
         self.model.spectraList.append(list_item_dict)
@@ -202,10 +230,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 # Clear the selection (as it is no longer valid).
                 self.listView.clearSelection()
 
+
+    @Slot()
+    def handle_check_state_changed(self, index, state):
+        """Show or hide the trace in the plot"""
+        trace = self.model.spectraList[index.row()]['plot']
+        if state == Qt.CheckState.Checked: #If checked make it visible
+            self.plotWidget.addItem(trace)
+        else:
+            self.plotWidget.removeItem(trace) 
     
-
-
-
+    @Slot()
+    def update_crosshair(self, e):
+        pos = e[0]
+        if self.plotWidget.sceneBoundingRect().contains(pos):
+            mousePoint = self.plotWidget.getPlotItem().vb.mapSceneToView(pos)
+            self.crosshair_v.setPos(mousePoint.x())
+            self.crosshair_h.setPos(mousePoint.y())
+            self.x_label.setText(f'X: {mousePoint.x():.2f}')
+            self.y_label.setText(f'Y: {mousePoint.y():.2f}')
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle('Fusion' )
