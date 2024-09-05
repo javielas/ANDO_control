@@ -31,7 +31,17 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="startWavlengthDoubleSpinBox"/>
+       <widget class="QDoubleSpinBox" name="startWavlengthDoubleSpinBox">
+        <property name="minimum">
+         <double>600.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1750.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1500.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="stopWavelengthLabel">
@@ -41,7 +51,17 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="stopWavelengthDoubleSpinBox"/>
+       <widget class="QDoubleSpinBox" name="stopWavelengthDoubleSpinBox">
+        <property name="minimum">
+         <double>600.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1750.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1600.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="sensitivityLabel">
@@ -87,7 +107,20 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="referenceLevelDoubleSpinBox"/>
+       <widget class="QDoubleSpinBox" name="referenceLevelDoubleSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-90.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>20.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="resoltuionNmLabel">
@@ -173,6 +206,27 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBox_2">
+            <property name="text">
+             <string>Calculate total power per trace</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox">
+            <property name="text">
+             <string>Trace as reference</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
              <widget class="QPushButton" name="DeletePushButton">
@@ -222,5 +276,22 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>checkBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>spinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>818</x>
+     <y>644</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>822</x>
+     <y>662</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
