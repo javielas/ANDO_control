@@ -13,9 +13,12 @@ rm = pyvisa.ResourceManager()
 # print(rm.list_resources())
 
 
+
 # ANDO AQ6315A grey old: 'GPIB0::1::INSTR'
 ANDO = rm.open_resource('GPIB0::3::INSTR')
 # print(ANDO_6315A.query('*IDN?'))
+
+ANDO.timeout = 40000
 
 def get_trace(trace, start, stop, ref_level, resolution, sensitivity):
     #Trace has to be A,B or C

@@ -200,10 +200,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         wl, power = osa_driver.get_trace(trace, start, stop, reference, resolution, sensitivity)
         return (wl, power)
 
-    @Slot()
+    @Slot() 
     def getAndPlotSpectrum(self):
         """Triggers the plot acquisition in a different thread. When the spectrum sweep is finished, it plots it"""
-        worker_get_spectrum = Worker(get_fake_spectrum)
+        worker_get_spectrum = Worker(self.get_spectrum)
         worker_get_spectrum.signals.result.connect(self.plotSpectrum)
         self.threadpool.start(worker_get_spectrum)
 

@@ -7,15 +7,15 @@ Created on Mon Nov  2 09:36:10 2020
 v1. 10 Nov 2020
 """
 
-import visa
+import pyvisa
 import numpy as np
 
-rm = visa.ResourceManager()
+rm = pyvisa.ResourceManager()
 # print(rm.list_resources())
 
 
 # ANDO AQ6315A grey old: 'GPIB0::1::INSTR'
-ANDO = rm.open_resource('GPIB0::1::INSTR')
+ANDO = rm.open_resource('GPIB0::3::INSTR')
 # print(ANDO_6315A.query('*IDN?'))
 
 def get_trace(trace):
