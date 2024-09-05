@@ -32,6 +32,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2 = QVBoxLayout(self.centralwidget)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setSpacing(16)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setSizeConstraint(QLayout.SetMaximumSize)
         self.startWavlengthLabel = QLabel(self.centralwidget)
@@ -41,6 +42,9 @@ class Ui_MainWindow(object):
 
         self.startWavlengthDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.startWavlengthDoubleSpinBox.setObjectName(u"startWavlengthDoubleSpinBox")
+        self.startWavlengthDoubleSpinBox.setMinimum(600.000000000000000)
+        self.startWavlengthDoubleSpinBox.setMaximum(1750.000000000000000)
+        self.startWavlengthDoubleSpinBox.setValue(1500.000000000000000)
 
         self.horizontalLayout.addWidget(self.startWavlengthDoubleSpinBox)
 
@@ -51,6 +55,9 @@ class Ui_MainWindow(object):
 
         self.stopWavelengthDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.stopWavelengthDoubleSpinBox.setObjectName(u"stopWavelengthDoubleSpinBox")
+        self.stopWavelengthDoubleSpinBox.setMinimum(600.000000000000000)
+        self.stopWavelengthDoubleSpinBox.setMaximum(1750.000000000000000)
+        self.stopWavelengthDoubleSpinBox.setValue(1600.000000000000000)
 
         self.horizontalLayout.addWidget(self.stopWavelengthDoubleSpinBox)
 
@@ -76,6 +83,10 @@ class Ui_MainWindow(object):
 
         self.referenceLevelDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.referenceLevelDoubleSpinBox.setObjectName(u"referenceLevelDoubleSpinBox")
+        self.referenceLevelDoubleSpinBox.setDecimals(1)
+        self.referenceLevelDoubleSpinBox.setMinimum(-90.000000000000000)
+        self.referenceLevelDoubleSpinBox.setMaximum(20.000000000000000)
+        self.referenceLevelDoubleSpinBox.setSingleStep(0.100000000000000)
 
         self.horizontalLayout.addWidget(self.referenceLevelDoubleSpinBox)
 
@@ -86,6 +97,9 @@ class Ui_MainWindow(object):
 
         self.resoltuionNmDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.resoltuionNmDoubleSpinBox.setObjectName(u"resoltuionNmDoubleSpinBox")
+        self.resoltuionNmDoubleSpinBox.setMinimum(0.050000000000000)
+        self.resoltuionNmDoubleSpinBox.setMaximum(10.000000000000000)
+        self.resoltuionNmDoubleSpinBox.setValue(0.100000000000000)
 
         self.horizontalLayout.addWidget(self.resoltuionNmDoubleSpinBox)
 
@@ -102,16 +116,6 @@ class Ui_MainWindow(object):
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer)
-
-        self.RepeatSweepPushButton = QPushButton(self.centralwidget)
-        self.RepeatSweepPushButton.setObjectName(u"RepeatSweepPushButton")
-
-        self.horizontalLayout_2.addWidget(self.RepeatSweepPushButton)
-
-        self.StopRepeatPushButton = QPushButton(self.centralwidget)
-        self.StopRepeatPushButton.setObjectName(u"StopRepeatPushButton")
-
-        self.horizontalLayout_2.addWidget(self.StopRepeatPushButton)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
@@ -182,7 +186,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1007, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1007, 22))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -207,8 +211,6 @@ class Ui_MainWindow(object):
         self.referenceLevelLabel.setText(QCoreApplication.translate("MainWindow", u"Reference Level (dBm)", None))
         self.resoltuionNmLabel.setText(QCoreApplication.translate("MainWindow", u"Resoltuion (nm)", None))
         self.SweepPushButton.setText(QCoreApplication.translate("MainWindow", u"Sweep", None))
-        self.RepeatSweepPushButton.setText(QCoreApplication.translate("MainWindow", u"Continuous sweep", None))
-        self.StopRepeatPushButton.setText(QCoreApplication.translate("MainWindow", u"Stop continuous", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Visible", None))
         self.DeletePushButton.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
         self.SavePushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))

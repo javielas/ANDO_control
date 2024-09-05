@@ -5,7 +5,7 @@ from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 import numpy as np
 import time
-
+import osa_driver
 
 from MainWindow import Ui_MainWindow
 
@@ -182,6 +182,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.DeletePushButton.clicked.connect(self.deleteTrace)
         self.model.check_state_changed.connect(self.handle_check_state_changed)
 
+    def get_spectrum(self):
+        start = self.startWavlengthDoubleSpinBox.value()
+        stop = self.stopWavelengthDoubleSpinBox.value()
+        resolution = self.resoltuionNmDoubleSpinBox.value()
+        reference = self.referenceLevelDoubleSpinBox.value()
+        sel_sensitivity = self.sensitivityComboBox.currentText()
+        sens_dict = {
+            'Hold': 'SNHD',
+            'Auto': 'SNAT',
+            'High 1': 'SHI1',
+            'High 2': 'SHI2',
+            'High 3': 'SHI3'
+        }
+        sensitivity = sens_dict[sel_sensitivity]
+        trace = 'A'
+        wl, power = osa_driver.get_trace(trace, start, stop, reference, resolution, sensitivity)
+        return (wl, power)
 
     @Slot()
     def getAndPlotSpectrum(self):
