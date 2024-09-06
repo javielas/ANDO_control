@@ -8,17 +8,20 @@
 
 import pyvisa
 import numpy as np
+import time
+import pint
+ureg = pint.UnitRegistry()
+
 
 rm = pyvisa.ResourceManager()
 # print(rm.list_resources())
 
 
 
-# ANDO AQ6315A grey old: 'GPIB0::1::INSTR'
 ANDO = rm.open_resource('GPIB0::3::INSTR')
-# print(ANDO_6315A.query('*IDN?'))
 
-ANDO.timeout = 40000
+
+ANDO.timeout = 40000 #ms
 
 def get_trace(trace, start, stop, ref_level, resolution, sensitivity):
     #Trace has to be A,B or C
@@ -31,13 +34,35 @@ def get_trace(trace, start, stop, ref_level, resolution, sensitivity):
     sensitivity_mode(sensitivity)
     #Perform a sweep
     ANDO.query('SGL')
-    #Get the data
-    wl = ANDO.query('WDAT'+trace).strip().split(',')[1:]
-    intensity = ANDO.query('LDAT'+trace).strip().split(',')[1:]
+    #Ensure that the sweep is finished
+    sweep_status = ANDO.query('SWEEP?')
+    while sweep_status != '0':
+        time.sleep(1)
+        sweep_status = ANDO.query('SWEEP?')
+    #Get the wavelength data
+    wl_read = ANDO.query('WDAT'+trace).strip().split(',')
+    wl = wl_read[1:]
     # list of strings -> numpy array (vector) of floats
     wl = np.asarray(wl,'f').T
-    intensity = np.asarray(intensity,'f').T
-    return wl, intensity
+    points_read_wl = wl_read[0].split(' ')[-1]
+    assert int(points_read_wl) == len(wl)
+    unit_wl = ureg.nm
+    
+
+
+    #Get the power data
+    power_read = ANDO.query('LDAT'+trace).strip().split(',')
+    power = power_read.split(',')[1:]
+    power = np.asarray(power,'f').T
+    points_read_power = power_read[0].split(' ')[-1]
+    assert int(points_read_power) == len(power)
+    unit_read_power = power_read[0].split(' ')[0]
+    assert unit_read_power in ('DBM', 'LNW') #Only absolute values can be received
+    if unit_read_power == 'DBM':
+        unit_power = ureg.dBm
+    else:
+        unit_power = ureg.W
+    return wl, power, unit_wl ,unit_power
 
 def set_range(start, stop):
     assert start>=600 and start<=1750

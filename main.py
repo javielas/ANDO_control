@@ -5,10 +5,13 @@ from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 import numpy as np
 import time
-import osa_driver
+
 
 from MainWindow import Ui_MainWindow
 
+offline_mode = True
+
+if not offline_mode: import osa_driver
 
 #Matplotlib default set of colors
 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
@@ -134,11 +137,6 @@ class SpectraViewList(QAbstractListModel):
     def flags(self, index):
         return super(SpectraViewList, self).flags(index)|Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable
 
-def get_fake_spectrum():
-    x = np.arange(100)
-    y = np.random.rand(100)
-    time.sleep(1)
-    return (x, y)
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -150,6 +148,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.model = SpectraViewList() # Set the model to be used and link it to the list of spectra
         self.listView.setModel(self.model) # Assign to the listView widget the model
+
+        self.sens_dict = {
+            'Hold': 'SNHD',
+            'Auto': 'SNAT',
+            'High 1': 'SHI1',
+            'High 2': 'SHI2',
+            'High 3': 'SHI3'
+        }
 
         #Plot Attributes
         self.plotWidget.setBackground('w')
@@ -188,22 +194,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         resolution = self.resoltuionNmDoubleSpinBox.value()
         reference = self.referenceLevelDoubleSpinBox.value()
         sel_sensitivity = self.sensitivityComboBox.currentText()
-        sens_dict = {
-            'Hold': 'SNHD',
-            'Auto': 'SNAT',
-            'High 1': 'SHI1',
-            'High 2': 'SHI2',
-            'High 3': 'SHI3'
-        }
-        sensitivity = sens_dict[sel_sensitivity]
+        sensitivity = self.sens_dict[sel_sensitivity]
         trace = 'A'
         wl, power = osa_driver.get_trace(trace, start, stop, reference, resolution, sensitivity)
-        return (wl, power)
+        return dict(wl = wl, power = power, start = start, stop = stop, resolution = resolution, 
+                    reference = reference, sel_sensitivity = sel_sensitivity)
+
+    @Slot()
+    def get_fake_spectrum(self):
+        start = self.startWavlengthDoubleSpinBox.value()
+        stop = self.stopWavelengthDoubleSpinBox.value()
+        resolution = self.resoltuionNmDoubleSpinBox.value()
+        reference = self.referenceLevelDoubleSpinBox.value()
+        sel_sensitivity = self.sensitivityComboBox.currentText()
+        x = np.arange(100)
+        y = np.random.rand(100)
+        time.sleep(1)
+        return dict(wl = x, power = y, start = start, stop = stop, resolution = resolution, 
+                    reference = reference, sel_sensitivity = sel_sensitivity)
 
     @Slot() 
     def getAndPlotSpectrum(self):
         """Triggers the plot acquisition in a different thread. When the spectrum sweep is finished, it plots it"""
-        worker_get_spectrum = Worker(self.get_spectrum)
+        if offline_mode:
+            worker_get_spectrum = Worker(self.get_fake_spectrum)
+        else:
+            worker_get_spectrum = Worker(self.get_spectrum)
         worker_get_spectrum.signals.result.connect(self.plotSpectrum)
         self.threadpool.start(worker_get_spectrum)
 
@@ -211,7 +227,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @Slot()
     def plotSpectrum(self, spectrum):
         """Plots the spectrum and adds it to the list of spectra"""
-        power, wavelength = spectrum[0], spectrum[1]
+        wavelength, power = spectrum['wl'], spectrum['power']
         #Get the previous color from the list or start with the first one
         if len(self.model.spectraList) != 0:
             previous_color = self.model.spectraList[-1]['color']
@@ -220,7 +236,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             color = QtGui.QColor(colors[0])
         #Get the color that's the next from the last one in the list
         pen = pg.mkPen(color= QtGui.QColor(color))
-        plot = self.plotWidget.plot(power, wavelength, name = f'Trace {len(self.model.spectraList)}', pen = pen)
+        plot = self.plotWidget.plot(wavelength, power, name = f'Trace {len(self.model.spectraList)}', pen = pen)
         list_item_dict = dict(name = f'Trace {len(self.model.spectraList)}', color = color, visible =True, plot = plot)
         self.model.spectraList.append(list_item_dict)
         # Trigger refresh.
