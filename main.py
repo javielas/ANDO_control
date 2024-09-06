@@ -15,7 +15,7 @@ from MainWindow import Ui_MainWindow
 ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
 Q_ = ureg.Quantity
 
-offline_mode = True
+offline_mode = False
 save_every_sweep = False
 
 if not offline_mode: import osa_driver
@@ -197,12 +197,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.model.check_state_changed.connect(self.handle_check_state_changed)
 
         #Initialize values for comparison of parameters between sweep calls
-        self.params = {'start': np.nan, 'stop': np.nan, 'resolution': np.nan, 'reference': np.nan, 
+        self.params = {'start': np.nan, 'stop': np.nan, 'resolution': np.nan, 'ref_level': np.nan, 
                        'sensitivity': np.nan, 'trace': np.nan, 'trace_points': np.nan}
         
         self.inputs = [self.startWavlengthDoubleSpinBox, self.stopWavelengthDoubleSpinBox, self.PointsNmspinBox, 
                        self.sensitivityComboBox, self.referenceLevelDoubleSpinBox, self.resoltuionNmDoubleSpinBox]
-
 
     def get_spectrum(self, updated_params):
         spectrum = osa_driver.get_trace(updated_params)
@@ -235,8 +234,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             input_widget.setEnabled(False)
 
         updated_params = self.get_changed_params()
-        print(updated_params)
-
         #Create a worker for the spectrum acquisition
         if offline_mode:
             worker_get_spectrum = Worker(self.get_fake_spectrum)
@@ -330,6 +327,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         #Add the date and time  to the notes
         date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        traces_dataset = xr.merge([trace['spectrum'] for trace in checked_traces], compat = 'no_conflicts')
 
         #Ask the user for the name and format of the file
         file_type, ok = QtWidgets.QInputDialog.getItem(self, "File format", "Please select the file format\nSelect NetCDF for processing in python",
@@ -343,8 +341,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if not name.endswith('.nc'):
                 name += '.nc'
 
-            traces_dataset = xr.merge([trace['spectrum'] for trace in checked_traces], compat = 'no_conflicts')
-            print(traces_dataset)
+
             traces_dataset.attrs['notes'] = notes
             traces_dataset.attrs['date'] = date
             for key, value in self.params.items():
@@ -357,10 +354,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             QtWidgets.QMessageBox.information(self, "File saved", f"File saved as {name}")
             
         elif file_type == "CSV":
-            self.save_to_csv(checked_traces, notes, date)
+            self.save_to_csv(traces_dataset, notes, date)
 
 
-    def save_to_csv(self, checked_traces, notes, date):
+    def save_to_csv(self, traces_dataset: xr.Dataset, notes: str, date: str):
         #Ask the user for the name of the file
         #Get the name and format from the user
         name, ok = QtWidgets.QFileDialog.getSaveFileName(self, "Save file", "", "CSV Files (*.csv);;All Files (*)")
@@ -375,22 +372,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             writer.writerow([f'Notes: {notes}  Date: {date}'])
             writer.writerow([f'Resolution: {self.params['resolution']} nm'])
             
-            # Write header
-            header = []
-            for trace in checked_traces:
-                spectrum = trace['spectrum']
-                name = spectrum.name
-                header.extend([f'Wavelength {name} (nm)', f'Power {name} (dBm)'])
-            writer.writerow(header)
+            # Convert to a dictionary for easier manipulation
+            data_dict = traces_dataset.to_dataframe().reset_index().to_dict(orient='list')
+
+            # Extract the Wavelength and data arrays
+            Wavelength = data_dict.pop('Wavelength')
+            arrays = list(data_dict.keys())
+
+
+            wavelength_units = traces_dataset['Wavelength'].attrs['units']
+            power_units = traces_dataset.attrs['units']
+            col_names = [f'{array} ({power_units})' for array in arrays ]
+
+            # Write the header
+            writer.writerow([f'Wavelength ({wavelength_units})'] + col_names)
             
-            # Prepare data
-            data = []
-            for trace in checked_traces:
-                data.append(trace['wavelength'].to(ureg.nm).magnitude)
-                data.append(trace.vals)
-            
-            # Write data rows
-            for row in zip(*data):
+            # Write the data rows
+            for i in range(len(Wavelength)):
+                row = [Wavelength[i]] + [data_dict[array][i] for array in arrays]
                 writer.writerow(row)
 
     @Slot()
@@ -422,7 +421,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             start = start,
             stop = stop,
             resolution = self.resoltuionNmDoubleSpinBox.value() * ureg.nm,
-            reference = self.referenceLevelDoubleSpinBox.value() * ureg.dBm,
+            ref_level = self.referenceLevelDoubleSpinBox.value() * ureg.dBm,
             trace_points = int(stop.magnitude-start.magnitude) * points_per_nm + 1,
             sensitivity = self.sens_dict[self.sensitivityComboBox.currentText()],
             trace = 'A'

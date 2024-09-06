@@ -10,8 +10,10 @@ import pyvisa
 import numpy as np
 import time
 from pint import UnitRegistry
+import pint
 ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
 Q_ = ureg.Quantity
+
 
 rm = pyvisa.ResourceManager()
 # print(rm.list_resources())
@@ -35,25 +37,26 @@ def get_trace(updated_params):
 
     if 'start' in updated_params and 'stop' in updated_params:
         start = updated_params['start']
-        if type(start) is ureg.Quantity:
+        if isinstance(start, pint.Quantity):
             start = start.to(ureg.nm).magnitude
+        print(f'Converted start: {start}, type: {type(start)}')
         set_start(start)
         
     if 'stop' in updated_params:
         stop = updated_params['stop']
-        if type(stop) is ureg.Quantity:
+        if isinstance(stop, pint.Quantity):
             stop = stop.to(ureg.nm).magnitude
         set_stop(stop)
 
     if 'ref_level' in updated_params:
         ref = updated_params['ref_level']
-        if type(ref) is ureg.Quantity:
+        if isinstance(ref, pint.Quantity):
             ref = ref.to(ureg.dBm).magnitude
         set_ref(ref)
 
     if 'resolution' in updated_params:
         resolution = updated_params['resolution']
-        if type(resolution) is ureg.Quantity:
+        if isinstance(resolution, pint.Quantity):
             resolution = resolution.to(ureg.nm).magnitude
         set_resolution(resolution)
 
@@ -69,7 +72,8 @@ def get_trace(updated_params):
     sweep_status = ANDO.query('SWEEP?')
     while sweep_status != '0':
         time.sleep(1)
-        sweep_status = ANDO.query('SWEEP?')
+        sweep_status = ANDO.query('SWEEP?').strip()
+        print(f'Ongoing sweep, code: {sweep_status}')
     #Get the wavelength data
     wl_read = ANDO.query('WDAT'+trace).strip().split(',')
     wl = wl_read[1:]
@@ -80,7 +84,7 @@ def get_trace(updated_params):
     
     #Get the power data
     power_read = ANDO.query('LDAT'+trace).strip().split(',')
-    power = power_read.split(',')[1:]
+    power = power_read[1:]
     power = np.asarray(power,'f').T
     points_read_power = power_read[0].split(' ')[-1]
     assert int(points_read_power) == len(power)
