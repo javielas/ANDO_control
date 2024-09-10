@@ -99,6 +99,7 @@ class Ui_MainWindow(object):
         self.resoltuionNmDoubleSpinBox.setObjectName(u"resoltuionNmDoubleSpinBox")
         self.resoltuionNmDoubleSpinBox.setMinimum(0.050000000000000)
         self.resoltuionNmDoubleSpinBox.setMaximum(10.000000000000000)
+        self.resoltuionNmDoubleSpinBox.setSingleStep(0.100000000000000)
         self.resoltuionNmDoubleSpinBox.setValue(0.100000000000000)
 
         self.horizontalLayout.addWidget(self.resoltuionNmDoubleSpinBox)
@@ -186,7 +187,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1007, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1007, 21))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")

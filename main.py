@@ -4,10 +4,15 @@ from PySide6.QtCore import QTimer, QRunnable, Slot, Signal, QObject, QThreadPool
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 import numpy as np
-import time
+import time, datetime
+from pint import UnitRegistry
+import csv, pickle
 
 
 from MainWindow import Ui_MainWindow
+
+ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
+Q_ = ureg.Quantity
 
 offline_mode = True
 
@@ -186,48 +191,83 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #Buttons slot connections
         self.SweepPushButton.clicked.connect(self.getAndPlotSpectrum)
         self.DeletePushButton.clicked.connect(self.deleteTrace)
+        self.SavePushButton.clicked.connect(self.saveChecked)
         self.model.check_state_changed.connect(self.handle_check_state_changed)
 
-    def get_spectrum(self):
-        start = self.startWavlengthDoubleSpinBox.value()
-        stop = self.stopWavelengthDoubleSpinBox.value()
-        resolution = self.resoltuionNmDoubleSpinBox.value()
-        reference = self.referenceLevelDoubleSpinBox.value()
-        sel_sensitivity = self.sensitivityComboBox.currentText()
-        sensitivity = self.sens_dict[sel_sensitivity]
-        trace = 'A'
-        wl, power = osa_driver.get_trace(trace, start, stop, reference, resolution, sensitivity)
-        return dict(wl = wl, power = power, start = start, stop = stop, resolution = resolution, 
-                    reference = reference, sel_sensitivity = sel_sensitivity)
+        #Initialize values for comparison of parameters between sweep calls
+        self.start = np.nan
+        self.stop = np.nan
+        self.resolution = np.nan
+        self.reference  = np.nan
+        self.sensitivity = np.nan
+        self.trace = np.nan
+
+    def get_spectrum(self, updated_params):
+        wl, power = osa_driver.get_trace(updated_params)
+        return dict(wl = wl, power = power)
+
+
 
     @Slot()
-    def get_fake_spectrum(self):
-        start = self.startWavlengthDoubleSpinBox.value()
-        stop = self.stopWavelengthDoubleSpinBox.value()
-        resolution = self.resoltuionNmDoubleSpinBox.value()
-        reference = self.referenceLevelDoubleSpinBox.value()
-        sel_sensitivity = self.sensitivityComboBox.currentText()
+    def get_fake_spectrum(self, updated_params):
+        """This is a fake spectrum, it is used to test the GUI"""
+        #Generate fake data
         x = np.arange(100)
         y = np.random.rand(100)
         time.sleep(1)
-        return dict(wl = x, power = y, start = start, stop = stop, resolution = resolution, 
-                    reference = reference, sel_sensitivity = sel_sensitivity)
+        spectrum_data = {
+        'wavelength': Q_(x,  ureg.nm),
+        'power': Q_(y , ureg.dBm),
+        }
+        return spectrum_data
 
     @Slot() 
     def getAndPlotSpectrum(self):
         """Triggers the plot acquisition in a different thread. When the spectrum sweep is finished, it plots it"""
+        updated_params = dict()
+        #Get the parameters from the GUI
+        start = self.startWavlengthDoubleSpinBox.value() * ureg.nm
+        stop = self.stopWavelengthDoubleSpinBox.value() * ureg.nm
+        resolution = self.resoltuionNmDoubleSpinBox.value() * ureg.nm
+        reference = self.referenceLevelDoubleSpinBox.value() * ureg.dBm
+        sel_sensitivity = self.sensitivityComboBox.currentText()
+        sensitivity = self.sens_dict[sel_sensitivity]
+        trace = 'A'
+        
+        self.current_params = dict(start = start, stop = stop, resolution = resolution, reference = reference,
+                                    sensitivity = sensitivity, trace = trace)
+
+        #Check if the parameters have changed since the last sweep
+        if self.start != start or self.stop != stop:
+            updated_params['start'] = start
+            self.start = start
+            updated_params['stop'] = stop
+            self.stop = stop
+        if self.resolution != resolution:
+            updated_params['resolution'] = resolution
+            self.resolution = resolution
+        if self.reference != reference:
+            updated_params['reference'] = reference
+            self.reference = reference
+        if self.sensitivity != sensitivity:
+            updated_params['sensitivity'] = sensitivity
+            self.sensitivity = sensitivity
+        if self.trace != trace:
+            updated_params['trace'] = trace
+            self.trace = trace
+
+        #Create a worker for the spectrum acquisition
         if offline_mode:
-            worker_get_spectrum = Worker(self.get_fake_spectrum)
+            worker_get_spectrum = Worker(self.get_fake_spectrum, updated_params)
         else:
-            worker_get_spectrum = Worker(self.get_spectrum)
+            worker_get_spectrum = Worker(self.get_spectrum, updated_params)
         worker_get_spectrum.signals.result.connect(self.plotSpectrum)
         self.threadpool.start(worker_get_spectrum)
 
 
     @Slot()
-    def plotSpectrum(self, spectrum):
+    def plotSpectrum(self, spectrum: dict):
         """Plots the spectrum and adds it to the list of spectra"""
-        wavelength, power = spectrum['wl'], spectrum['power']
         #Get the previous color from the list or start with the first one
         if len(self.model.spectraList) != 0:
             previous_color = self.model.spectraList[-1]['color']
@@ -236,9 +276,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             color = QtGui.QColor(colors[0])
         #Get the color that's the next from the last one in the list
         pen = pg.mkPen(color= QtGui.QColor(color))
-        plot = self.plotWidget.plot(wavelength, power, name = f'Trace {len(self.model.spectraList)}', pen = pen)
-        list_item_dict = dict(name = f'Trace {len(self.model.spectraList)}', color = color, visible =True, plot = plot)
-        self.model.spectraList.append(list_item_dict)
+        wavelength = spectrum['wavelength'].to(ureg.nm).magnitude
+        power = spectrum['power'].to(ureg.dBm).magnitude
+        plot = self.plotWidget.plot(wavelength, power, 
+                                    name = f'Trace {len(self.model.spectraList)}', pen = pen)
+        #Add the trace to the list of traces
+        trace_info = {
+            'plot': plot,
+            'color': color,
+            'name': f'Trace {len(self.model.spectraList)}',
+            'pen': pen,
+            'visible': True,
+            'plot': plot,
+            **spectrum,
+            **self.current_params
+        }
+        self.model.spectraList.append(trace_info)
         # Trigger refresh.
         self.model.layoutChanged.emit()
 
@@ -265,6 +318,78 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     @Slot()
+    def saveChecked(self):
+        """Save all the checked traces to a file, asking for name and format"""
+        #Get the checked traces
+        checked_traces = [trace for trace in self.model.spectraList if trace['visible']]
+        if len(checked_traces) == 0:
+            QtWidgets.QMessageBox.warning(self, "No traces selected", "Please select at least one trace to save")
+            return
+        #Ask the user for additional notes
+        notes, ok = QtWidgets.QInputDialog.getText(self, "Additional notes", "Please enter additional notes for the file (optional)")  
+        if not ok:
+            return
+        #Add the date and time  to the notes
+        date = f' - Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+
+        #Ask the user for the name and format of the file
+        file_type, ok = QtWidgets.QInputDialog.getItem(self, "File format", "Please select the file format\nSelect Pickle for processing in python",
+                                                       ["Pickle", "CSV"], 0, False)
+        if not ok:
+            return
+        if file_type == "Pickle":
+            #Ask the user for the name of the file
+            name, ok = QtWidgets.QFileDialog.getSaveFileName(self, "Save file", "", "Pickle Files (*.pkl);;All Files (*)")
+            if not ok:
+                return
+            if not name.endswith('.pkl'):
+                name += '.pkl'
+            #Save the traces to the file
+            with open(name, 'wb') as f:
+                traces_to_save = []
+                keys_to_exclude = ['plot', 'pen', 'visible', 'color']
+                for trace in checked_traces:
+                    for key in keys_to_exclude:
+                        trace_to_save = {k: v for k, v in trace.items() if k not in keys_to_exclude}
+                        traces_to_save.append(trace_to_save)
+                dict_to_save = {
+                    'traces': traces_to_save,
+                    'notes': notes,
+                    'date': date
+                }
+                pickle.dump(dict_to_save, f)
+
+        elif file_type == "CSV":
+            #Ask the user for the name of the file
+            #Get the name and format from the user
+            name, ok = QtWidgets.QFileDialog.getSaveFileName(self, "Save file", "", "CSV Files (*.csv);;All Files (*)")
+            if not ok:
+                return
+            if not name.endswith('.csv'):
+                name += '.csv'
+            #Save the traces to the file
+            with open(name, 'w', newline='') as f:
+                writer = csv.writer(f)
+
+                writer.writerow(['Notes: ' + notes + date])
+                
+                # Write header
+                header = []
+                for trace in checked_traces:
+                    header.extend([f'Wavelength {trace["name"]} (nm)', f'Power {trace["name"]} (dBm) - Resolution {trace["resolution"].magnitude} (nm)'])
+                writer.writerow(header)
+                
+                # Prepare data
+                data = []
+                for trace in checked_traces:
+                    data.append(trace['wavelength'].to(ureg.nm).magnitude)
+                    data.append(trace['power'].to(ureg.dBm).magnitude)
+                
+                # Write data rows
+                for row in zip(*data):
+                    writer.writerow(row)
+
+    @Slot()
     def handle_check_state_changed(self, index, state):
         """Show or hide the trace in the plot"""
         trace = self.model.spectraList[index.row()]['plot']
@@ -283,9 +408,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.x_label.setText(f'X: {mousePoint.x():.2f}')
             self.y_label.setText(f'Y: {mousePoint.y():.2f}')
 
-app = QtWidgets.QApplication(sys.argv)
-app.setStyle('Fusion' )
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    app.setStyle('Fusion' )
 
-window = MainWindow()
-window.show()
-app.exec()
+    window = MainWindow()
+    window.show()
+    app.exec()
