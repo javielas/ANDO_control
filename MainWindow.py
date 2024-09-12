@@ -17,7 +17,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDoubleSpinBox, QHBoxLayout,
     QLabel, QLayout, QListView, QMainWindow,
-    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QMenuBar, QPushButton, QSizePolicy, QSpinBox,
     QStatusBar, QVBoxLayout, QWidget)
 
 from pyqtgraph import PlotWidget
@@ -42,6 +42,7 @@ class Ui_MainWindow(object):
 
         self.startWavlengthDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.startWavlengthDoubleSpinBox.setObjectName(u"startWavlengthDoubleSpinBox")
+        self.startWavlengthDoubleSpinBox.setDecimals(0)
         self.startWavlengthDoubleSpinBox.setMinimum(600.000000000000000)
         self.startWavlengthDoubleSpinBox.setMaximum(1750.000000000000000)
         self.startWavlengthDoubleSpinBox.setValue(1500.000000000000000)
@@ -55,6 +56,7 @@ class Ui_MainWindow(object):
 
         self.stopWavelengthDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.stopWavelengthDoubleSpinBox.setObjectName(u"stopWavelengthDoubleSpinBox")
+        self.stopWavelengthDoubleSpinBox.setDecimals(0)
         self.stopWavelengthDoubleSpinBox.setMinimum(600.000000000000000)
         self.stopWavelengthDoubleSpinBox.setMaximum(1750.000000000000000)
         self.stopWavelengthDoubleSpinBox.setValue(1600.000000000000000)
@@ -97,27 +99,40 @@ class Ui_MainWindow(object):
 
         self.resoltuionNmDoubleSpinBox = QDoubleSpinBox(self.centralwidget)
         self.resoltuionNmDoubleSpinBox.setObjectName(u"resoltuionNmDoubleSpinBox")
-        self.resoltuionNmDoubleSpinBox.setMinimum(0.050000000000000)
-        self.resoltuionNmDoubleSpinBox.setMaximum(10.000000000000000)
+        self.resoltuionNmDoubleSpinBox.setMinimum(0.010000000000000)
+        self.resoltuionNmDoubleSpinBox.setMaximum(2.000000000000000)
         self.resoltuionNmDoubleSpinBox.setSingleStep(0.100000000000000)
         self.resoltuionNmDoubleSpinBox.setValue(0.100000000000000)
 
         self.horizontalLayout.addWidget(self.resoltuionNmDoubleSpinBox)
+
+        self.PointsNmlabel = QLabel(self.centralwidget)
+        self.PointsNmlabel.setObjectName(u"PointsNmlabel")
+
+        self.horizontalLayout.addWidget(self.PointsNmlabel)
+
+        self.PointsNmspinBox = QSpinBox(self.centralwidget)
+        self.PointsNmspinBox.setObjectName(u"PointsNmspinBox")
+        self.PointsNmspinBox.setMinimum(1)
+        self.PointsNmspinBox.setMaximum(100)
+        self.PointsNmspinBox.setValue(50)
+
+        self.horizontalLayout.addWidget(self.PointsNmspinBox)
+
+        self.SweepPushButton = QPushButton(self.centralwidget)
+        self.SweepPushButton.setObjectName(u"SweepPushButton")
+        icon = QIcon()
+        icon.addFile(u"Icons/icons8-play-50.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.SweepPushButton.setIcon(icon)
+        self.SweepPushButton.setIconSize(QSize(32, 32))
+
+        self.horizontalLayout.addWidget(self.SweepPushButton)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.SweepPushButton = QPushButton(self.centralwidget)
-        self.SweepPushButton.setObjectName(u"SweepPushButton")
-
-        self.horizontalLayout_2.addWidget(self.SweepPushButton)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_2.addItem(self.horizontalSpacer)
-
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
@@ -156,11 +171,19 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.DeletePushButton = QPushButton(self.centralwidget)
         self.DeletePushButton.setObjectName(u"DeletePushButton")
+        icon1 = QIcon()
+        icon1.addFile(u"Icons/delete-icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.DeletePushButton.setIcon(icon1)
+        self.DeletePushButton.setIconSize(QSize(32, 32))
 
         self.horizontalLayout_6.addWidget(self.DeletePushButton)
 
         self.SavePushButton = QPushButton(self.centralwidget)
         self.SavePushButton.setObjectName(u"SavePushButton")
+        icon2 = QIcon()
+        icon2.addFile(u"Icons/icons8-save-96.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.SavePushButton.setIcon(icon2)
+        self.SavePushButton.setIconSize(QSize(32, 32))
 
         self.horizontalLayout_6.addWidget(self.SavePushButton)
 
@@ -200,8 +223,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.startWavlengthLabel.setText(QCoreApplication.translate("MainWindow", u"Start Wavlength (nm)", None))
-        self.stopWavelengthLabel.setText(QCoreApplication.translate("MainWindow", u"Stop Wavelength (nm)", None))
+        self.startWavlengthLabel.setText(QCoreApplication.translate("MainWindow", u"Start (nm)", None))
+        self.stopWavelengthLabel.setText(QCoreApplication.translate("MainWindow", u"Stop (nm)", None))
         self.sensitivityLabel.setText(QCoreApplication.translate("MainWindow", u"Sensitivity", None))
         self.sensitivityComboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"Hold", None))
         self.sensitivityComboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Auto", None))
@@ -211,9 +234,10 @@ class Ui_MainWindow(object):
 
         self.referenceLevelLabel.setText(QCoreApplication.translate("MainWindow", u"Reference Level (dBm)", None))
         self.resoltuionNmLabel.setText(QCoreApplication.translate("MainWindow", u"Resoltuion (nm)", None))
+        self.PointsNmlabel.setText(QCoreApplication.translate("MainWindow", u"Points/nm", None))
         self.SweepPushButton.setText(QCoreApplication.translate("MainWindow", u"Sweep", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Visible", None))
         self.DeletePushButton.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
-        self.SavePushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
+        self.SavePushButton.setText(QCoreApplication.translate("MainWindow", u"Save checked", None))
     # retranslateUi
 

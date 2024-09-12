@@ -45,6 +45,9 @@ def get_trace(updated_params):
 
     if 'sensitivity' in updated_params:
         sensitivity_mode(updated_params['sensitivity'])
+    
+    if 'trace_points' in updated_params:
+        set_trace_points(updated_params['trace_points'])
 
     #Perform a sweep
     ANDO.query('SGL')
@@ -85,7 +88,7 @@ def set_ref(ref_level):
     ANDO.query(f'REFL{ref_level:.1f}')
 
 def set_resolution(resolution):
-    assert resolution>=0.05 and resolution<=10.0
+    assert resolution>=0.01 and resolution<=2.0
     ANDO.query(f'RESLN{resolution:.2f}')
 
 def active_trace(trace):
@@ -96,5 +99,9 @@ def active_trace(trace):
 def sensitivity_mode(sensitivity):
     assert sensitivity in ('SNHD', 'SNAT', 'SHI1', 'SHI2', 'SHI3')
     ANDO.query(sensitivity)
+
+def set_trace_points(trace_points):
+    assert trace_points>=11 and trace_points<=20001
+    ANDO.query(f'SMPL{trace_points}')
 
 
