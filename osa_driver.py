@@ -34,14 +34,28 @@ def get_trace(updated_params):
     active_trace(trace)
 
     if 'start' in updated_params and 'stop' in updated_params:
-        set_range(updated_params['start'].ito(ureg.nm).magnitude,
-                  updated_params['stop'].ito(ureg.nm).magnitude)
+        start = updated_params['start']
+        if type(start) is ureg.Quantity:
+            start = start.to(ureg.nm).magnitude
+        set_start(start)
+        
+    if 'stop' in updated_params:
+        stop = updated_params['stop']
+        if type(stop) is ureg.Quantity:
+            stop = stop.to(ureg.nm).magnitude
+        set_stop(stop)
 
     if 'ref_level' in updated_params:
-        set_ref(updated_params['ref_level'].ito(ureg.dBm).magnitude)
+        ref = updated_params['ref_level']
+        if type(ref) is ureg.Quantity:
+            ref = ref.to(ureg.dBm).magnitude
+        set_ref(ref)
 
     if 'resolution' in updated_params:
-        set_resolution(updated_params['resolution'].ito(ureg.nm).magnitude)
+        resolution = updated_params['resolution']
+        if type(resolution) is ureg.Quantity:
+            resolution = resolution.to(ureg.nm).magnitude
+        set_resolution(resolution)
 
     if 'sensitivity' in updated_params:
         sensitivity_mode(updated_params['sensitivity'])
@@ -76,20 +90,30 @@ def get_trace(updated_params):
     }
     return spectrum_data
 
-def set_range(start, stop):
+def set_start(start):
     assert start>=600 and start<=1750
-    assert stop>=600 and stop<=1750
-    assert stop>start
     ANDO.query(f'STAWL{start:.2f}')
+    rec_start = ANDO.query('STAWL?')
+    assert float(rec_start.strip()) == start, f'Start wavelength not set correctly, expected {start}, got {rec_start}'
+
+def set_stop(stop):
+    assert stop>=600 and stop<=1750
     ANDO.query(f'STPWL{stop:.2f}')
+    rec_stop = ANDO.query('STPWL?')
+    assert float(rec_stop.strip()) == stop, f'Stop wavelength not set correctly, expected {stop}, got {rec_stop}'
+
 
 def set_ref(ref_level):
     assert ref_level>=-90 and ref_level<=20
     ANDO.query(f'REFL{ref_level:.1f}')
+    rec_ref = ANDO.query('REFL?')
+    assert float(rec_ref.strip()) == ref_level, f'Reference level not set correctly, expected {ref_level}, got {rec_ref}'
 
 def set_resolution(resolution):
     assert resolution>=0.01 and resolution<=2.0
     ANDO.query(f'RESLN{resolution:.2f}')
+    rec_res = ANDO.query('RESLN?')
+    assert float(rec_res.strip()) == resolution, f'Resolution not set correctly, expected {resolution}, got {rec_res}'
 
 def active_trace(trace):
     assert trace in ('A','B','C')
@@ -103,5 +127,7 @@ def sensitivity_mode(sensitivity):
 def set_trace_points(trace_points):
     assert trace_points>=11 and trace_points<=20001
     ANDO.query(f'SMPL{trace_points}')
+    rec_points = ANDO.query('SMPL?')
+    assert int(rec_points.strip()) == trace_points, f'Trace points not set correctly, expected {trace_points}, got {rec_points}'
 
 
