@@ -6,7 +6,6 @@ import pyqtgraph as pg
 import numpy as np
 import time, datetime
 import xarray as xr
-import pint_xarray
 from pint import UnitRegistry
 
 
@@ -268,8 +267,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         power_array['Wavelength'].attrs['units'] = f'{spectrum['wavelength'].units:~}'
 
         if save_every_sweep:
-            power_array.to_netcdf(f'./temp/trace_test4.nc')
-            #{datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")}.nc')
+            power_array.to_netcdf(f'./temp/{datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")}.nc')
+            
 
 
         plot = self.plotWidget.plot(wavelength, power, name = name, pen = pen)
