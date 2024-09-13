@@ -199,6 +199,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #Initialize values for comparison of parameters between sweep calls
         self.params = {'start': np.nan, 'stop': np.nan, 'resolution': np.nan, 'reference': np.nan, 
                        'sensitivity': np.nan, 'trace': np.nan, 'trace_points': np.nan}
+        
+        self.inputs = [self.startWavlengthDoubleSpinBox, self.stopWavelengthDoubleSpinBox, self.PointsNmspinBox, 
+                       self.sensitivityComboBox, self.referenceLevelDoubleSpinBox, self.resoltuionNmDoubleSpinBox]
 
 
     def get_spectrum(self, updated_params):
@@ -227,11 +230,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @Slot() 
     def getAndPlotSpectrum(self):
         """Triggers the plot acquisition in a different thread. When the spectrum sweep is finished, it plots it.
-        Disables all the spinboxes buttons, except for the start and stop"""
-        self.resoltuionNmDoubleSpinBox.setEnabled(False)
-        self.referenceLevelDoubleSpinBox.setEnabled(False)
-        self.sensitivityComboBox.setEnabled(False)
-        self.PointsNmspinBox.setEnabled(False)
+        Disables all the spinboxes buttons"""
+        for input_widget in self.inputs:
+            input_widget.setEnabled(False)
 
         updated_params = self.get_changed_params()
         print(updated_params)
@@ -311,10 +312,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         #If the list is empty, enable the buttons
         if len(self.model.spectraList) == 0:
-            self.resoltuionNmDoubleSpinBox.setEnabled(True)
-            self.referenceLevelDoubleSpinBox.setEnabled(True)
-            self.sensitivityComboBox.setEnabled(True)
-            self.PointsNmspinBox.setEnabled(True)
+            for input_widget in self.inputs:
+                input_widget.setEnabled(True)
 
 
     @Slot()
